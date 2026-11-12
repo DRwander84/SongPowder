@@ -56,10 +56,10 @@ There are three ways to work with the project. All commands assume you are in th
 Open PowerShell and run:
 
 ```powershell
-.\scripts\package.bat -QtDir "C:\Qt\6.8.1\msvc2022_64" -InnoDir "C:\Program Files (x86)\Inno Setup 6"
+.\scripts\package.bat -QtDir "Installation path of Qt\Version\msvc2022_64" -InnoDir "Installation path of Inno Setup 6"
 ```
 
-Replace both paths with the ones on your machine. If you leave out `-QtDir`, the script tries to find your Qt installation on its own. When it finishes, you will find the results in the `dist` folder:
+If you leave out `-QtDir`, the script tries to find your Qt installation on its own. When it finishes, you will find the results in the `dist` folder:
 
 ```text
 dist\SongPowder\                      portable folder, run SongPowder.exe
@@ -101,6 +101,16 @@ More details are in [docs/BUILD.md](docs/BUILD.md), and the design decisions are
 When installing Qt, make sure these modules are selected: **Qt Multimedia**, **Qt Quick Controls**, **Qt Quick Dialogs**, **Qt Shader Tools** and **Qt SQL**.
 
 Your library, settings and cover cache are stored in `%LOCALAPPDATA%\SongPowder`, so nothing is written next to the executable.
+
+## Recommended Channel
+
+By visiting the [PC Gaming Hub](https://t.me/pcgaminghub) Telegram channel, you can follow the latest gaming and technology news.
+
+## Donation
+
+If you would like to support me, you can send a donation to the following address:
+
+`TMKpNvJ73RR6g2NQ3b18eAHZuXCkbiTUv7`
 
 ## License
 
