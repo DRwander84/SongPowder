@@ -102,6 +102,16 @@ When installing Qt, make sure these modules are selected: **Qt Multimedia**, **Q
 
 Your library, settings and cover cache are stored in `%LOCALAPPDATA%\SongPowder`, so nothing is written next to the executable.
 
+## Recommended Channel
+
+By visiting the [PC Gaming Hub](https://t.me/pcgaminghub) Telegram channel, you can follow the latest gaming and technology news.
+
+## Donation
+
+If you would like to support me, you can send a donation to the following address:
+
+`TMKpNvJ73RR6g2NQ3b18eAHZuXCkbiTUv7`
+
 ## License
 
 SongPowder is released under the [Apache License 2.0](LICENSE).
