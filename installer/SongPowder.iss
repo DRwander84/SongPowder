@@ -32,6 +32,7 @@ SolidCompression=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
+ChangesAssociations=yes
 WizardStyle=modern
 PrivilegesRequiredOverridesAllowed=dialog
 ; an update installs over a running copy: close it first
@@ -51,6 +52,61 @@ Source: "{#BuildOutput}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsub
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+
+; Register SongPowder as an available Windows app for audio file associations.
+; We deliberately do NOT overwrite the user's current default-app choices.
+[Registry]
+; Windows Default Apps registration and capabilities.
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "SongPowder"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "SongPowder audio player"; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "SongPowder"; ValueData: "Software\SongPowder\Capabilities"; Flags: uninsdeletevalue
+
+; Shared ProgID used by every supported audio extension.
+Root: HKCU; Subkey: "Software\Classes\SongPowder.Audio"; ValueType: string; ValueName: ""; ValueData: "SongPowder Audio File"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\SongPowder.Audio\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"",0"
+Root: HKCU; Subkey: "Software\Classes\SongPowder.Audio\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#AppExe}"" ""%1"""
+
+; Windows Settings -> Apps -> Default apps -> SongPowder -> file types.
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".mp3"; ValueData: "SongPowder.Audio"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".flac"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wav"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aac"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".m4a"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ogg"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".oga"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".opus"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wma"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aiff"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aif"; ValueData: "SongPowder.Audio"
+Root: HKCU; Subkey: "Software\SongPowder\Capabilities\FileAssociations"; ValueType: string; ValueName: ".aifc"; ValueData: "SongPowder.Audio"
+
+; Populate Open With for each extension without changing its current default handler.
+Root: HKCU; Subkey: "Software\Classes\.mp3\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.flac\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.wav\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.aac\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.m4a\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.ogg\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.oga\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.opus\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.wma\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.aiff\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.aif\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Classes\.aifc\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
+
+; Advertise supported types in the standard Applications registration as well.
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".mp3"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".flac"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".wav"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".aac"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".m4a"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".ogg"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".oga"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".opus"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".wma"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".aiff"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".aif"; ValueData: ""; Flags: uninsdeletekeyifempty
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".aifc"; ValueData: ""; Flags: uninsdeletekeyifempty
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent

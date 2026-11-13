@@ -81,6 +81,7 @@ private:
     int pickNextIndex();
     void rebuildBag();
     void setError(const QString &e);
+    QString saveCover(QImage img) const;
 
     Database *m_db;
     QMediaPlayer m_player;
@@ -98,6 +99,8 @@ private:
     int m_errorStreak = 0;
     qint64 m_lastEmitPos = 0;   // throttles position updates (UI needs ~8 Hz, not 50 Hz)
     bool m_fillMeta = false;    // current track came from outside the library: read tags while loading
+    bool m_coverDone = false;   // embedded artwork of the current outside-library track already extracted
+    bool m_lazyQueue = false;   // queue holds bare sibling files; library data is looked up when a track starts
     QString m_error;
 };
 

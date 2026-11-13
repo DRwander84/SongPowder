@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Multimedia Sql Concurrent)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2 Multimedia Sql Concurrent Network)
 find_package(Qt6 6.5 REQUIRED COMPONENTS ShaderTools)
 find_package(Qt6 6.5 QUIET OPTIONAL_COMPONENTS Test)
 qt_policy(SET QTP0001 NEW)
@@ -129,7 +129,7 @@ qt_add_shaders(SongPowder "songpowder_shaders"
 )
 
 target_compile_definitions(SongPowder PRIVATE SONGPOWDER_VERSION="${PROJECT_VERSION}")
-target_link_libraries(SongPowder PRIVATE songpowder_core Qt6::QuickControls2)
+target_link_libraries(SongPowder PRIVATE songpowder_core Qt6::QuickControls2 Qt6::Network)
 set_target_properties(SongPowder PROPERTIES OUTPUT_NAME "SongPowder")
 if(WIN32)
     target_link_libraries(SongPowder PRIVATE user32)   # MessageBoxW for startup errors

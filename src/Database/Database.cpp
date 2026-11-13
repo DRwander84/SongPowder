@@ -316,12 +316,14 @@ void Database::recordPlay(const Track &t)
         "ON CONFLICT(path) DO UPDATE SET title=excluded.title, artist=excluded.artist, album=excluded.album,"
         " duration_ms=excluded.duration_ms, cover=excluded.cover, last_played=excluded.last_played,"
         " play_count=play_count+1"));
-    q.addBindValue(t.path);
-    q.addBindValue(t.title);
-    q.addBindValue(t.artist);
-    q.addBindValue(t.album);
+    // Null QStrings bind as SQL NULL, which violates the NOT NULL columns (files without tags, opened via "Open with").
+    const auto nn = [](const QString &v) { return v.isNull() ? QString(QLatin1String("")) : v; };
+    q.addBindValue(nn(t.path));
+    q.addBindValue(nn(t.title));
+    q.addBindValue(nn(t.artist));
+    q.addBindValue(nn(t.album));
     q.addBindValue(t.durationMs);
-    q.addBindValue(t.cover);
+    q.addBindValue(nn(t.cover));
     q.addBindValue(QDateTime::currentMSecsSinceEpoch());
     if (!q.exec())
         qWarning() << "recordPlay failed:" << q.lastError().text();

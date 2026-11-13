@@ -4,8 +4,13 @@
 #include "MediaLibrary/TrackModel.h"
 
 #include "MediaLibrary/LibraryManager.h"
+#include "Settings/SettingsManager.h"
 
 #include <QAudio>
+#include <QCollator>
+#include <QCryptographicHash>
+#include <QDirIterator>
+#include <QImage>
 #include <QMediaMetaData>
 #include <QDir>
 #include <QFileInfo>
@@ -36,16 +41,33 @@ PlayerController::PlayerController(Database *db, QObject *parent) : QObject(pare
             const QVariant v = md.value(k);
             return (v.typeId() == QMetaType::QStringList ? v.toStringList().join(QStringLiteral(", ")) : v.toString()).trimmed();
         };
+        bool changed = false;
         const QString title = str(QMediaMetaData::Title);
-        if (title.isEmpty())
-            return;
-        m_current.title = title;
-        QString artist = str(QMediaMetaData::ContributingArtist);
-        if (artist.isEmpty()) artist = str(QMediaMetaData::AlbumArtist);
-        m_current.artist = artist;
-        m_current.album = str(QMediaMetaData::AlbumTitle);
-        m_fillMeta = false;
-        emit currentChanged();
+        if (!title.isEmpty()) {
+            QString artist = str(QMediaMetaData::ContributingArtist);
+            if (artist.isEmpty()) artist = str(QMediaMetaData::AlbumArtist);
+            const QString album = str(QMediaMetaData::AlbumTitle);
+            if (title != m_current.title || artist != m_current.artist || album != m_current.album) {
+                m_current.title = title;
+                m_current.artist = artist;
+                m_current.album = album;
+                changed = true;
+            }
+        }
+        // Embedded artwork (outside-library files only; none found => the QML placeholder stays).
+        if (!m_coverDone && m_current.cover.isEmpty()) {
+            const QImage img = md.value(QMediaMetaData::CoverArtImage).value<QImage>();
+            if (!img.isNull()) {
+                m_coverDone = true;
+                const QString file = saveCover(img);
+                if (!file.isEmpty()) {
+                    m_current.cover = file;
+                    changed = true;
+                }
+            }
+        }
+        if (changed)
+            emit currentChanged();
     });
     connect(&m_player, &QMediaPlayer::durationChanged, this, &PlayerController::durationChanged);
     connect(&m_player, &QMediaPlayer::playbackStateChanged, this, [this] { emit stateChanged(); });
@@ -74,6 +96,22 @@ PlayerController::~PlayerController()
     m_spectrum.detach();   // the tap must not outlive the player it is attached to
     m_player.stop();
     m_player.setSource(QUrl());
+}
+
+// Same cache format as the library scanner (512px JPEG named by content hash), so identical artwork is shared.
+QString PlayerController::saveCover(QImage img) const
+{
+    const QString dir = SettingsManager::defaultDataDir() + QStringLiteral("/covers");
+    QDir().mkpath(dir);
+    if (img.width() > 512 || img.height() > 512)
+        img = img.scaled(512, 512, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    const QByteArray hash = QCryptographicHash::hash(
+        QByteArray(reinterpret_cast<const char *>(img.constBits()), qsizetype(img.sizeInBytes())),
+        QCryptographicHash::Sha1).toHex();
+    const QString file = dir + QLatin1Char('/') + QString::fromLatin1(hash) + QStringLiteral(".jpg");
+    if (QFileInfo::exists(file) || img.convertToFormat(QImage::Format_RGB32).save(file, "JPG", 85))
+        return file;
+    return {};
 }
 
 QString PlayerController::state() const
@@ -143,6 +181,7 @@ void PlayerController::playFromModel(QObject *model, int row)
     if (!tm || row < 0 || row >= tm->count())
         return;
     m_queue = tm->tracks();
+    m_lazyQueue = false;
     m_history.clear();
     m_errorStreak = 0;
     m_index = row;
@@ -155,6 +194,11 @@ bool PlayerController::playIndex(int index)
 {
     if (index < 0 || index >= m_queue.size())
         return false;
+    if (m_lazyQueue && m_queue.at(index).artist.isEmpty() && m_queue.at(index).album.isEmpty() && m_queue.at(index).durationMs == 0) {
+        Track known;   // sibling file: use library data (tags, cover) when the file happens to be in the library
+        if (m_db->findByPath(m_queue.at(index).path, &known))
+            m_queue[index] = known;
+    }
     const Track &t = m_queue.at(index);
     if (!QFileInfo::exists(t.path)) {
         qWarning() << "Track file is gone:" << t.path;
@@ -170,7 +214,8 @@ bool PlayerController::playIndex(int index)
         m_history.removeFirst();
 
     m_current = t;
-    m_fillMeta = t.artist.isEmpty() && t.album.isEmpty() && t.durationMs == 0;
+    m_coverDone = !t.cover.isEmpty();
+    m_fillMeta = (t.artist.isEmpty() && t.album.isEmpty() && t.durationMs == 0) || t.cover.isEmpty();
     m_lastEmitPos = 0;
     m_spectrum.load(t.path);   // before the new source: resets the live tap so it never mixes two tracks
     m_player.setSource(QUrl::fromLocalFile(t.path));
@@ -278,13 +323,52 @@ void PlayerController::playFiles(const QStringList &urls)
         setError(tr("That file is not a supported audio file."));
         return;
     }
+    int start = 0;
+    m_lazyQueue = false;
+    if (q.size() == 1) {
+        // One file opened by hand: queue the audio files next to it in folder order so Next/Previous work.
+        // This is a temporary queue only; nothing is added to Playlists or My Audios.
+        const QFileInfo opened(q.first().path);
+        QStringList names;
+        QDirIterator it(opened.absolutePath(), QDir::Files | QDir::Readable);
+        while (it.hasNext()) {
+            it.next();
+            if (LibraryManager::isAudioFile(it.fileName()))
+                names.append(it.fileName());
+        }
+        if (names.size() > 1) {
+            QCollator collator;
+            collator.setNumericMode(true);
+            collator.setCaseSensitivity(Qt::CaseInsensitive);
+            std::sort(names.begin(), names.end(), [&](const QString &a, const QString &b) { return collator.compare(a, b) < 0; });
+            QList<Track> siblings;
+            siblings.reserve(names.size());
+            int found = -1;
+            for (const QString &n : std::as_const(names)) {
+                if (found < 0 && QString::compare(n, opened.fileName(), Qt::CaseInsensitive) == 0) {
+                    found = int(siblings.size());
+                    siblings.append(q.first());   // the opened file keeps its library data
+                    continue;
+                }
+                Track s;
+                s.path = QDir::cleanPath(opened.absolutePath() + QLatin1Char('/') + n);
+                s.title = QFileInfo(n).completeBaseName();
+                siblings.append(s);
+            }
+            if (found >= 0) {
+                q = siblings;
+                start = found;
+                m_lazyQueue = true;
+            }
+        }
+    }
     m_queue = q;
     m_history.clear();
     m_errorStreak = 0;
-    m_index = 0;
+    m_index = start;
     rebuildBag();
     emit userStartedPlayback();
-    if (!playIndex(0))
+    if (!playIndex(start))
         advance(false);
 }
 
