@@ -56,10 +56,10 @@ There are three ways to work with the project. All commands assume you are in th
 Open PowerShell and run:
 
 ```powershell
-.\scripts\package.bat -QtDir "C:\Qt\6.8.1\msvc2022_64" -InnoDir "C:\Program Files (x86)\Inno Setup 6"
+.\scripts\package.bat -QtDir "C:\Qt installation path\Folder Version\msvc2022_64" -InnoDir "Inno Setup6 installation path"
 ```
 
-Replace both paths with the ones on your machine. If you leave out `-QtDir`, the script tries to find your Qt installation on its own. When it finishes, you will find the results in the `dist` folder:
+If you leave out `-QtDir`, the script tries to find your Qt installation on its own. When it finishes, you will find the results in the `dist` folder:
 
 ```text
 dist\SongPowder\                      portable folder, run SongPowder.exe
