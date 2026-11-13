@@ -24,7 +24,7 @@ SongPowder plays the music you already have. Point it at your folders and it doe
 - **Folders as playlists.** Add as many music folders as you like. Each one becomes a playlist and is watched for changes.
 - **Background scanning.** Tags and artwork are read without freezing the interface. Files that cannot be decoded are detected and hidden.
 - **Real playback.** Play, pause, seek, next, previous, loop, and shuffle that never repeats a song until the whole cycle is done.
-- **Synced lyrics.** Reads `.lrc` (including word-by-word), SRT and WebVTT files, and plain text. Persian and Arabic text is fully supported, including right-to-left layouts.
+- **Synced lyrics.** Reads `.lrc`,txt (including word-by-word), SRT and WebVTT files, and plain text. Persian and Arabic text is fully supported, including right-to-left layouts.
 - **Live equalizer.** A radial spectrum around the album cover that follows the music in real time.
 - **Customization.** Colors, fonts, glass effect, motion, layout and player style, with themes and profiles you can save, import and export.
 - **Recent plays.** Your listening history is stored locally in SQLite.
