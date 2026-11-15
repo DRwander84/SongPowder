@@ -1,6 +1,6 @@
-<div align="right">
+<div align="right" dir="rtl">
 
-[🇬🇧 English](README.md) | [🇮🇷 فارسی](README.fa.md)
+[🇮🇷 فارسی](README.fa.md)
 
 </div>
 
