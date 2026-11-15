@@ -1,3 +1,9 @@
+<div align="right">
+
+[🇬🇧 English](README.md) | [🇮🇷 فارسی](README.fa.md)
+
+</div>
+
 <div align="center">
 
 <img src="resources/logo/songpowder.png" alt="SongPowder logo" width="140" />
