@@ -1,5 +1,7 @@
 <div align="center">
 
+[🇮🇷 فارسی](README.fa.md)
+
 <img src="resources/logo/songpowder.png" alt="SongPowder logo" width="140" />
 
 # SongPowder
