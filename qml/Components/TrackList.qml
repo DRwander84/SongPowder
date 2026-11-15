@@ -8,6 +8,30 @@ ListView {
     boundsBehavior: Flickable.StopAtBounds
     reuseItems: true
     cacheBuffer: 600
+    // Delete flow shared by every row: ask first, then release the file (skip to the next track if it was playing)
+    // and send it to the Recycle Bin.
+    property string pendingPath: ""
+    property string pendingTitle: ""
+    function askDelete(path, title) { pendingPath = path; pendingTitle = title; deleteDlg.open() }
+    CzConfirm {
+        id: deleteDlg
+        title: Strings.tr("Delete this music?")
+        message: Strings.tr("Do you want to delete “%1” from your computer? It will be moved to the Recycle Bin, so you can restore it from there.").arg(list.pendingTitle)
+        okText: Strings.tr("Yes")
+        cancelText: Strings.tr("No")
+        onConfirmed: {
+            player.removeFromQueue(list.pendingPath)
+            if (!library.deleteTrack(list.pendingPath))
+                failDlg.open()
+        }
+    }
+    CzConfirm {
+        id: failDlg
+        infoOnly: true
+        title: Strings.tr("Could not delete the file.")
+        message: Strings.tr("The file may be in use or protected. Nothing was deleted.")
+        cancelText: Strings.tr("OK")
+    }
     ScrollBar.vertical: ScrollBar {
         id: vbar
         LayoutMirroring.enabled: false   // keep the handle on the right edge in RTL, clear of the durations
@@ -26,6 +50,9 @@ ListView {
         required property bool available
 
         readonly property bool isCurrent: player.currentPath === path
+        readonly property bool hot: rowHover.hovered
+
+        HoverHandler { id: rowHover }
 
         width: ListView.view.width - 12
         height: Math.max(Theme.listShowArt ? Math.max(52, Theme.listArt + 18) : 52, info.implicitHeight + 20)   // grows with the text
@@ -33,7 +60,7 @@ ListView {
         Rectangle {
             anchors.fill: parent
             radius: Theme.radiusSmall + 2
-            color: row.isCurrent ? Theme.selected : (area.pressed ? Theme.pressed : (area.containsMouse ? Theme.hover : "transparent"))
+            color: row.isCurrent ? Theme.selected : (area.pressed ? Theme.pressed : (row.hot && row.available ? Theme.hover : "transparent"))
             border.width: row.isCurrent ? 1 : 0
             border.color: Theme.selectedBorder
             Behavior on color { ColorAnimation { duration: Theme.dur(120) } }
@@ -72,7 +99,8 @@ ListView {
         }
         Text {
             id: dur
-            anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
+            anchors { right: parent.right; rightMargin: row.hot ? 16 + trashBtn.width + 6 : 16; verticalCenter: parent.verticalCenter }
+            Behavior on anchors.rightMargin { NumberAnimation { duration: Theme.dur(120); easing.type: Easing.OutCubic } }
             text: row.durationText
             font.family: Theme.fontTrack; font.letterSpacing: Theme.letterSpacing; font.pixelSize: Theme.px(13)
             color: Theme.textDim
@@ -84,6 +112,19 @@ ListView {
             cursorShape: Qt.PointingHandCursor
             enabled: row.available
             onClicked: player.playFromModel(list.model, row.index)
+        }
+        // Trash icon: only while the pointer is over this row, at its end.
+        IconButton {
+            id: trashBtn
+            anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            diameter: 34
+            iconSize: Theme.ipx(15)
+            glyph: Theme.icoDelete
+            tip: Strings.tr("Delete")
+            opacity: row.hot ? 1 : 0
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: Theme.dur(120) } }
+            onClicked: list.askDelete(row.path, row.title)
         }
     }
 }

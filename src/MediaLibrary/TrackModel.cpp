@@ -153,6 +153,30 @@ void TrackModel::updateByPath(const Track &t)
     }
 }
 
+void TrackModel::removeByPath(const QString &path)
+{
+    const auto s = m_srcByPath.constFind(path);
+    if (s == m_srcByPath.constEnd())
+        return;
+    const int si = *s;
+    m_source.removeAt(si);
+    m_folded.removeAt(si);
+    m_srcByPath.remove(path);
+    for (int i = si; i < m_source.size(); ++i)
+        m_srcByPath[m_source.at(i).path] = i;
+
+    if (const auto r = m_rowByPath.constFind(path); r != m_rowByPath.constEnd()) {
+        const int row = *r;
+        beginRemoveRows({}, row, row);
+        m_tracks.removeAt(row);
+        m_rowByPath.remove(path);
+        for (int i = row; i < m_tracks.size(); ++i)
+            m_rowByPath[m_tracks.at(i).path] = i;
+        endRemoveRows();
+    }
+    emit countChanged();
+}
+
 QVariantMap TrackModel::trackAt(int row) const
 {
     return (row >= 0 && row < m_tracks.size()) ? m_tracks.at(row).toMap() : QVariantMap();

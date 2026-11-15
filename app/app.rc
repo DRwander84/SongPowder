@@ -1,1 +1,35 @@
+#pragma code_page(65001)
+#include <winver.h>
+
 1 ICON "../resources/logo/songpowder.ico"
+
+// Version resource: Windows reads FileDescription for the name in "Default apps" / "Open with" and the
+// Details tab of the file properties, and LegalCopyright for the Copyright line there.
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,1,0
+ PRODUCTVERSION 1,0,1,0
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+ FILEFLAGS 0x0L
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "SongPowder"
+            VALUE "FileDescription", "SongPowder"
+            VALUE "FileVersion", "1.0.1.0"
+            VALUE "InternalName", "SongPowder"
+            VALUE "LegalCopyright", "Copyright © 2026 @DRwander84. All rights reserved."
+            VALUE "OriginalFilename", "SongPowder.exe"
+            VALUE "ProductName", "SongPowder"
+            VALUE "ProductVersion", "1.0.1.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

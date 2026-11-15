@@ -231,15 +231,20 @@ int PlayerController::pickNextIndex()
 {
     if (m_queue.isEmpty())
         return -1;
+    // The whole list has been played: start over from the first track (shuffle then continues with a fresh bag).
     if (m_shuffle) {
         if (m_bag.isEmpty()) {
             if (m_queue.size() == 1)
-                return -1;
-            m_bag = makeShuffleBag(m_queue.size(), m_index); // new cycle, never repeats the current track
+                return 0;
+            if (m_index != 0) {
+                m_bag = makeShuffleBag(m_queue.size(), 0);   // new cycle opens with the first track
+                return 0;
+            }
+            m_bag = makeShuffleBag(m_queue.size(), m_index); // first track just played: never repeat it back to back
         }
         return m_bag.first();
     }
-    return m_index + 1 < m_queue.size() ? m_index + 1 : -1;
+    return m_index + 1 < m_queue.size() ? m_index + 1 : 0;
 }
 
 bool PlayerController::advance(bool automatic)
@@ -291,6 +296,91 @@ void PlayerController::previous()
         if (playIndex(i))
             return;
     m_player.setPosition(0);
+}
+
+void PlayerController::previousTrack()
+{
+    if (!hasTrack() || m_queue.isEmpty())
+        return;
+    m_errorStreak = 0;
+    if (m_shuffle) {
+        if (m_history.size() > 1) {
+            m_history.removeLast();
+            const int prev = m_history.takeLast();
+            if (playIndex(prev))
+                return;
+        }
+        m_player.setPosition(0);
+        return;
+    }
+    // Wraps from the first track to the last, mirroring what Next does at the end of the list.
+    const int n = int(m_queue.size());
+    const int from = m_index < 0 ? 0 : m_index;
+    for (int k = 1; k < n; ++k)
+        if (playIndex(((from - k) % n + n) % n))
+            return;
+    m_player.setPosition(0);
+}
+
+void PlayerController::removeFromQueue(const QString &path)
+{
+    if (path.isEmpty())
+        return;
+    const bool wasCurrent = hasTrack() && m_current.path == path;
+
+    // Rebuild the queue without the file; remap[] translates old indices to new ones (-1 = removed).
+    QList<int> remap(m_queue.size(), -1);
+    QList<Track> kept;
+    kept.reserve(m_queue.size());
+    int keptBeforeCurrent = 0;
+    for (int i = 0; i < m_queue.size(); ++i) {
+        if (m_queue.at(i).path == path)
+            continue;
+        remap[i] = int(kept.size());
+        kept.append(m_queue.at(i));
+        if (i < m_index)
+            ++keptBeforeCurrent;
+    }
+    if (kept.size() != m_queue.size()) {
+        const auto remapList = [&remap](const QList<int> &in) {
+            QList<int> out;
+            out.reserve(in.size());
+            for (int v : in)
+                if (v >= 0 && v < remap.size() && remap.at(v) >= 0)
+                    out.append(remap.at(v));
+            return out;
+        };
+        m_bag = remapList(m_bag);
+        m_history = remapList(m_history);
+        const int oldIndex = m_index;
+        m_queue = kept;
+        m_index = (oldIndex >= 0 && oldIndex < remap.size()) ? remap.at(oldIndex) : -1;
+    }
+    if (!wasCurrent)
+        return;
+
+    // The playing file is being deleted: move on to the next track (random one when shuffle is on), so the
+    // old file is released before it is sent to the Recycle Bin.
+    m_errorStreak = 0;
+    if (!m_queue.isEmpty()) {
+        m_index = m_shuffle ? -1 : keptBeforeCurrent - 1;   // pickNextIndex() continues from here (wraps to the first)
+        if (advance(true))
+            return;
+    }
+    // Nothing left to play.
+    m_player.stop();
+    m_player.setSource(QUrl());
+    m_spectrum.clear();
+    m_current = Track();
+    m_index = -1;
+    m_bag.clear();
+    m_history.clear();
+    m_fillMeta = false;
+    m_coverDone = false;
+    m_lastEmitPos = 0;
+    emit currentChanged();
+    emit positionChanged();
+    emit durationChanged();
 }
 
 void PlayerController::play()

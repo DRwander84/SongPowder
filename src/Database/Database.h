@@ -33,6 +33,7 @@ public:
                      qint64 durationMs, const QString &cover);
     void markBroken(const QString &path);
     bool findByPath(const QString &path, Track *out); // any non-broken row with this path
+    void removeTrackByPath(const QString &path);      // forgets the file everywhere (library rows + recent plays)
 
     // Group many small writes into one transaction (big speed-up while reading tags).
     void beginBatch();

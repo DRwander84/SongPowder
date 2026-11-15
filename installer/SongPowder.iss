@@ -1,9 +1,9 @@
-; Inno Setup 6 script. Normally run by scripts\package.ps1, which passes the version and the folder to pack:
+﻿; Inno Setup 6 script. Normally run by scripts\package.ps1, which passes the version and the folder to pack:
 ;   ISCC.exe /DAppVersion=1.0.0 /DBuildOutput=C:\path\dist\SongPowder /O C:\path\dist installer\SongPowder.iss
 ; Run by hand without /D switches it falls back to the defaults below (expects dist\SongPowder from package.ps1).
 #define AppName "SongPowder"
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.1"
 #endif
 #ifndef BuildOutput
   #define BuildOutput "..\dist\SongPowder"
@@ -17,7 +17,11 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
+AppCopyright=Copyright © 2026 @DRwander84. All rights reserved.
 VersionInfoVersion={#AppVersion}
+VersionInfoCopyright=Copyright © 2026 @DRwander84. All rights reserved.
+VersionInfoDescription={#AppName} Setup
+VersionInfoProductName={#AppName}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
@@ -95,6 +99,8 @@ Root: HKCU; Subkey: "Software\Classes\.aif\OpenWithProgids"; ValueType: none; Va
 Root: HKCU; Subkey: "Software\Classes\.aifc\OpenWithProgids"; ValueType: none; ValueName: "SongPowder.Audio"; Flags: uninsdeletevalue
 
 ; Advertise supported types in the standard Applications registration as well.
+; Friendly name shown by Windows (Default apps / Open with) instead of "SongPowder.exe".
+Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#AppName}"; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".mp3"; ValueData: ""; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".flac"; ValueData: ""; Flags: uninsdeletekeyifempty
 Root: HKCU; Subkey: "Software\Classes\Applications\{#AppExe}\SupportedTypes"; ValueType: string; ValueName: ".wav"; ValueData: ""; Flags: uninsdeletekeyifempty

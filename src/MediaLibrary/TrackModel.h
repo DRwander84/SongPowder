@@ -35,6 +35,7 @@ public:
 
     void setTracks(const QList<Track> &tracks);
     void updateByPath(const Track &t); // updates metadata of the row with the same path
+    void removeByPath(const QString &path); // drops one row without resetting the model (the list keeps its scroll position)
 
     Q_INVOKABLE QVariantMap trackAt(int row) const;
     Q_INVOKABLE void setFilter(const QString &text);

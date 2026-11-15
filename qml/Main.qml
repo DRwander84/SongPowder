@@ -43,6 +43,20 @@ ApplicationWindow {
         enabled: player.hasTrack
         onActivated: player.togglePlayPause()
     }
+    // Left / Right arrow = previous / next track, in the player page and the mini player alike.
+    // Text inputs keep the arrows for moving the caret.
+    Shortcut {
+        sequence: "Left"
+        context: Qt.WindowShortcut
+        enabled: player.hasTrack
+        onActivated: player.previousTrack()
+    }
+    Shortcut {
+        sequence: "Right"
+        context: Qt.WindowShortcut
+        enabled: player.hasTrack
+        onActivated: player.next()
+    }
 
     // Customization tokens -> design system. `mode` "auto" keeps following the old sun/moon switch.
     readonly property bool effectiveDark: {

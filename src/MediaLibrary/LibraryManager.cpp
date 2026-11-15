@@ -4,7 +4,9 @@
 
 #include <QDir>
 #include <QDirIterator>
+#include <QFile>
 #include <QFileInfo>
+#include <QThread>
 #include <QtConcurrent>
 #include <utility>
 #include <QDebug>
@@ -152,6 +154,31 @@ void LibraryManager::clearRecent()
 {
     m_db->clearRecent();
     reloadRecent();
+}
+
+bool LibraryManager::deleteTrack(const QString &path)
+{
+    if (path.isEmpty())
+        return false;
+    if (QFileInfo::exists(path)) {
+        // Recycle Bin, not a permanent delete. A file that was playing a moment ago can take a few ms to be released.
+        bool ok = QFile::moveToTrash(path);
+        for (int i = 0; !ok && i < 6 && QFileInfo::exists(path); ++i) {
+            QThread::msleep(100);
+            ok = QFile::moveToTrash(path);
+        }
+        if (!ok && QFileInfo::exists(path)) {
+            qWarning() << "Could not move to the Recycle Bin:" << path;
+            emit message(tr("Could not delete the file."));
+            return false;
+        }
+    }
+    m_db->removeTrackByPath(path);
+    m_all.removeByPath(path);
+    m_folder.removeByPath(path);
+    m_recent.removeByPath(path);
+    reloadFolders(); // playlist track counts
+    return true;
 }
 
 void LibraryManager::addFolder(const QUrl &url)

@@ -69,6 +69,7 @@ public slots:
     void rescanFolder(qint64 id);
     void reloadRecent();
     void clearRecent();
+    bool deleteTrack(const QString &path); // moves the file to the Recycle Bin and forgets it; false if that failed
 
 signals:
     void foldersChanged();

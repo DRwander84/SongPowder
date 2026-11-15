@@ -7,6 +7,8 @@ Popup {
     property string title: ""
     property string message: ""
     property string okText: Strings.tr("Confirm")
+    property string cancelText: Strings.tr("Cancel")
+    property bool infoOnly: false          // message box with a single button (no confirm action)
     signal confirmed()
 
     anchors.centerIn: Overlay.overlay
@@ -28,8 +30,8 @@ Popup {
         Row {
             spacing: 10
             anchors.right: parent.right
-            PillButton { text: Strings.tr("Cancel"); filled: false; onClicked: p.close() }
-            PillButton { text: p.okText; danger: true; filled: false; onClicked: { p.confirmed(); p.close() } }
+            PillButton { text: p.cancelText; filled: false; onClicked: p.close() }
+            PillButton { visible: !p.infoOnly; text: p.okText; danger: true; filled: false; onClicked: { p.confirmed(); p.close() } }
         }
     }
 }

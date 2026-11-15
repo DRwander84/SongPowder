@@ -60,6 +60,8 @@ public slots:
     void stop();
     void next();
     void previous();
+    void previousTrack();     // always jumps to the previous track (keyboard shortcut), never just restarts
+    void removeFromQueue(const QString &path); // a file is being deleted: drop it, and move on if it is playing
     void seek(qint64 ms);
     void playFiles(const QStringList &urls); // drag & drop / "open with": plays immediately
 

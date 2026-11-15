@@ -305,6 +305,17 @@ bool Database::findByPath(const QString &path, Track *out)
     return false;
 }
 
+void Database::removeTrackByPath(const QString &path)
+{
+    for (const char *sql : {"DELETE FROM tracks WHERE path=?", "DELETE FROM recent WHERE path=?"}) {
+        QSqlQuery q(m_db);
+        q.prepare(QString::fromLatin1(sql));
+        q.addBindValue(path);
+        if (!q.exec())
+            qWarning() << "removeTrackByPath failed:" << q.lastError().text();
+    }
+}
+
 void Database::beginBatch() { m_db.transaction(); }
 void Database::commitBatch() { m_db.commit(); }
 
