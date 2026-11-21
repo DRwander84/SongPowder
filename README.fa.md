@@ -118,6 +118,8 @@ ctest --test-dir build\release --output-on-failure
 
 `TMKpNvJ73RR6g2NQ3b18eAHZuXCkbiTUv7`
 
+ریالی -> https://reymit.ir/drwander84
+
 ## مجوز استفاده
 
 SongPowder تحت [مجوز Apache نسخه ۲.۰](LICENSE) منتشر شده است.
